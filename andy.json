@@ -1,6 +1,5 @@
 {
     "name": "Mish_AI",
 
-    "model": "gemini-2.5-flash-lite"
-
+"model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
 }
