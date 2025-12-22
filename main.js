@@ -70,3 +70,20 @@ for (let profile of settings.profiles) {
     settings.profile = profile_json;
     Mindcraft.createAgent(settings);
 }
+
+import express from 'express';
+
+const app = express();
+
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.get('/', (req, res) => {
+  res.send('<h1>🟢 Mish_AI is alive!</h1><p>Bot Minecraft lagi aktif nih sayang~ ❤️</p>');
+});
+
+const port = process.env.PORT || 8080;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Health check server jalan di port ${port}`);
+});
