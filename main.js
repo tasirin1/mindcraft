@@ -3,6 +3,7 @@ import settings from './settings.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { readFileSync } from 'fs';
+import express from 'express';
 
 function parseArguments() {
     return yargs(hideBin(process.argv))
@@ -70,8 +71,6 @@ for (let profile of settings.profiles) {
     settings.profile = profile_json;
     Mindcraft.createAgent(settings);
 }
-
-import express from 'express';
 
 const app = express();
 
