@@ -2,7 +2,7 @@ const settings = {
     "minecraft_version": "auto", // or specific version like "1.21.6"
     "host": "mishcreative.aternos.me", // or "localhost", "your.ip.address.here"
     "port": 58495, // set to -1 to automatically scan for open ports
-    "auth": "online", // or "microsoft"
+    "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI
     "mindserver_port": 8080,
