@@ -10,6 +10,7 @@
         "canvas": "^3.1.0",
         "cheerio": "^1.0.0",
         "express": "^4.18.2",
+        "pg": "^8.12.0",
         "google-translate-api-x": "^10.7.1",
         "groq-sdk": "^0.15.0",
         "minecraft-data": "^3.97.0",
