@@ -1,6 +1,6 @@
 {
     "name": "Mish_AI",
 
-"model": "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
+"model": "groq/openai/gpt-oss-120b"
 
 }
