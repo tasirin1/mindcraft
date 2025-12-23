@@ -3,4 +3,6 @@
   "init_commands": ["/joinq survival1"],
   "password": "password_kamu",
   "auto_login": true
+  "spawn_timeout": 60,
+  
 }
