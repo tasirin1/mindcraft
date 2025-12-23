@@ -1,6 +1,6 @@
 const settings = {
     "minecraft_version": "auto", // or specific version like "1.21.6"
-    "host": "alwination.id", // or "localhost", "your.ip.address.here"
+    "host": "mishcreative.aternos.me", // or "localhost", "your.ip.address.here"
     "port": -1, // set to -1 to automatically scan for open ports
     "auth": "offline", // or "microsoft"
 
@@ -10,8 +10,8 @@ const settings = {
     
     "base_profile": "assistant", // survival, assistant, creative, or god_mode
     "profiles": [
-        //"./andy.json",
-        "./ai.json",
+        "./andy.json",
+        //"./ai.json",
         // "./profiles/claude.json",
         // "./profiles/gemini.json",
         // "./profiles/llama.json",
