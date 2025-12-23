@@ -2,106 +2,8 @@ import * as Mindcraft from './src/mindcraft/mindcraft.js';
 import settings from './settings.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { readFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync } from 'fs';
 import express from 'express';
-import { Pool } from 'pg'; // tambahan buat Aiven
-
-let dbPool = null;
-
-// Setup database kalo ada DATABASE_URL (Aiven)
-if (process.env.DATABASE_URL) {
-  dbPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } // biar aman di prod
-  });
-  console.log('Memory bakal disave ke Aiven PostgreSQL ❤️');
-}
-
-// Fungsi save memory ke DB atau local
-async function saveMemoryToDB(botName, memory) {
-  if (!dbPool) return false;
-
-  const client = await dbPool.connect();
-  try {
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS bot_memory (
-        bot_name TEXT PRIMARY KEY,
-        memory JSONB NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await client.query(`
-      INSERT INTO bot_memory (bot_name, memory)
-      VALUES ($1, $2)
-      ON CONFLICT (bot_name) DO UPDATE
-      SET memory = EXCLUDED.memory, updated_at = CURRENT_TIMESTAMP
-    `, [botName, memory]);
-
-    console.log(`Memory ${botName} saved ke Aiven DB`);
-    return true;
-  } catch (err) {
-    console.error('Gagal save ke DB:', err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-// Fungsi load memory dari DB
-async function loadMemoryFromDB(botName) {
-  if (!dbPool) return null;
-
-  const client = await dbPool.connect();
-  try {
-    const res = await client.query(
-      'SELECT memory FROM bot_memory WHERE bot_name = $1',
-      [botName]
-    );
-    if (res.rows.length > 0) {
-      console.log(`Memory ${botName} loaded dari Aiven DB`);
-      return res.rows[0].memory;
-    }
-    return null;
-  } catch (err) {
-    console.error('Gagal load dari DB:', err);
-    return null;
-  } finally {
-    client.release();
-  }
-}
-
-// Override fungsi save/load memory di Mindcraft (hook sederhana)
-const originalSave = global.saveMemory || (() => {});
-const originalLoad = global.loadMemory || (() => null);
-
-global.saveMemory = async (botName, memory) => {
-  // Save ke DB dulu
-  if (dbPool) await saveMemoryToDB(botName, memory);
-
-  // Tetep save local sebagai backup
-  const dir = `./bots/${botName}`;
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  require('fs').writeFileSync(`${dir}/memory.json`, JSON.stringify(memory, null, 2));
-
-  // Panggil original kalo ada
-  originalSave(botName, memory);
-};
-
-global.loadMemory = async (botName) => {
-  // Prioritas load dari DB
-  if (dbPool) {
-    const dbMem = await loadMemoryFromDB(botName);
-    if (dbMem) return dbMem;
-  }
-
-  // Fallback ke local
-  const path = `./bots/${botName}/memory.json`;
-  if (existsSync(path)) {
-    return JSON.parse(readFileSync(path, 'utf8'));
-  }
-  return null;
-};
 
 function parseArguments() {
     return yargs(hideBin(process.argv))
@@ -135,7 +37,6 @@ if (process.env.MAX_MESSAGES) settings.max_messages = process.env.MAX_MESSAGES;
 if (process.env.NUM_EXAMPLES) settings.num_examples = process.env.NUM_EXAMPLES;
 if (process.env.LOG_ALL) settings.log_all_prompts = process.env.LOG_ALL;
 
-// Override model dari env
 Mindcraft.init(true, settings.mindserver_port, settings.auto_open_ui);
 
 for (let profile of settings.profiles) {
