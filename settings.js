@@ -1,7 +1,7 @@
 const settings = {
     "minecraft_version": "auto", // or specific version like "1.21.6"
-    "host": "mishcreative.aternos.me", // or "localhost", "your.ip.address.here"
-    "port": 58495, // set to -1 to automatically scan for open ports
+    "host": "alwination.id", // or "localhost", "your.ip.address.here"
+    "port": -1, // set to -1 to automatically scan for open ports
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI
@@ -10,8 +10,8 @@ const settings = {
     
     "base_profile": "assistant", // survival, assistant, creative, or god_mode
     "profiles": [
-        "./andy.json",
-        // "./profiles/gpt.json",
+        //"./andy.json",
+        "./ai.json",
         // "./profiles/claude.json",
         // "./profiles/gemini.json",
         // "./profiles/llama.json",
@@ -28,7 +28,7 @@ const settings = {
 
     "load_memory": false, // load memory from previous session
     "init_message": "Respond with hello world and your name", // sends to all on spawn
-    "only_chat_with": [], // users that the bots listen to and send general messages to. if empty it will chat publicly
+    "only_chat_with": [Rudi_51], // users that the bots listen to and send general messages to. if empty it will chat publicly
 
     "speak": false,
     // allows all bots to speak through text-to-speech. 
