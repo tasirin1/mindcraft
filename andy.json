@@ -1,5 +1,6 @@
 {
     "name": "Mish_AI",
 
-"model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
+"model": "openrouter/cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
+
 }
