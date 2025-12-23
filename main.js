@@ -67,7 +67,14 @@ if (process.env.LOG_ALL) {
 Mindcraft.init(true, settings.mindserver_port, settings.auto_open_ui);
 
 for (let profile of settings.profiles) {
-    const profile_json = JSON.parse(readFileSync(profile, 'utf8'));
+    let profile_json = JSON.parse(readFileSync(profile, 'utf8'));
+
+    // Override model dari env var kalo ada
+    if (process.env.BOT_MODEL) {
+        profile_json.model = process.env.BOT_MODEL;
+        console.log(`Model di-override jadi: ${process.env.BOT_MODEL}`);
+    }
+
     settings.profile = profile_json;
     Mindcraft.createAgent(settings);
 }
