@@ -1,5 +1,5 @@
 {
     "name": "Mish_AI",
 
-"model": "openai/gpt-5.2-chat"
+"model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
 }
