@@ -8,7 +8,7 @@ const settings = {
     "mindserver_port": 8080,
     "auto_open_ui": true, // opens UI in browser on startup
     
-    "base_profile": "assistant", // survival, assistant, creative, or god_mode
+    "base_profile": "survival", // survival, assistant, creative, or god_mode
     "profiles": [
         "./andy.json",
         //"./ai.json",
@@ -26,7 +26,7 @@ const settings = {
         // individual profiles override values from the base profile
     ],
 
-    "load_memory": false, // load memory from previous session
+    "load_memory": true, // load memory from previous session
     "init_message": "Respond with hello world and your name", // sends to all on spawn
 "only_chat_with": [], // users that the bots listen to and send general messages to. if empty it will chat publicly
 
