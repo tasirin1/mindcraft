@@ -71,6 +71,17 @@ export function createMindServer(host_public = false, port = 8080) {
         res.json({ url });
     });
 
+    // Model AI aktif saat ini (dari setelan agen pertama yang terdaftar,
+    // atau env BOT_MODEL) — buat ditampilkan panel web.
+    app.get('/current-model', (req, res) => {
+        let model = process.env.BOT_MODEL || '';
+        for (let name in agent_connections) {
+            const m = agent_connections[name].settings?.profile?.model;
+            if (m) { model = typeof m === 'string' ? m : (m.model || ''); break; }
+        }
+        res.json({ model });
+    });
+
     // Texture proxy: resolve item/block textures using minecraft-assets with version fallback
     app.get('/assets/item/:agent/:name.png', async (req, res) => {
         try {
@@ -237,6 +248,26 @@ export function createMindServer(host_public = false, port = 8080) {
             process.env[name] = key;
             console.log(`API key ${name} dipasang lewat panel web (panjang ${key.length}); berlaku untuk proses agen berikutnya.`);
             if (callback) callback({ success: true });
+        });
+
+        // Pemilihan model dari panel web (perintah owner 2026-11-17):
+        // model ditulis ke setelan profil tiap agen di memori mindserver
+        // (+ env BOT_MODEL), lalu UI me-restart agen agar model baru
+        // terbaca proses agen berikutnya. Tidak ditulis ke berkas/git.
+        socket.on('set-model', (model, callback) => {
+            const m = typeof model === 'string' ? model.trim() : '';
+            if (!m || m.length > 120 || /\s/.test(m)) {
+                if (callback) callback({ success: false, error: 'Nama model tidak valid' });
+                return;
+            }
+            let changed = 0;
+            for (let name in agent_connections) {
+                const prof = agent_connections[name].settings?.profile;
+                if (prof) { prof.model = m; changed++; }
+            }
+            process.env.BOT_MODEL = m;
+            console.log(`Model AI diganti dari panel: ${m} (${changed} agen) — restart agen untuk menerapkan.`);
+            if (callback) callback({ success: true, model: m, agents: changed });
         });
 
         socket.on('set-agent-settings', (agentName, settings) => {

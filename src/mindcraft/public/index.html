@@ -392,6 +392,21 @@
             <button class="start-btn" onclick="setApiKey()">Pasang Key &amp; Restart Bot</button>
         </div>
         <div id="apiKeyStatus" style="margin-top:8px;font-size:0.9em;opacity:0.85;"></div>
+        <div style="font-weight:bold;margin:14px 0 8px;">Model AI</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <select id="modelSelect" style="padding:6px;" onchange="onModelSelectChange()">
+                <option value="gemini-flash-latest">Gemini Flash — gratis (bawaan)</option>
+                <option value="gemini-2.5-flash-lite">Gemini Flash-Lite — gratis, paling irit</option>
+                <option value="openrouter/free">OpenRouter Free — campuran model gratis</option>
+                <option value="openrouter/google/gemini-2.5-flash-lite">Gemini Flash-Lite via OpenRouter — gratis</option>
+                <option value="openrouter/meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B via OpenRouter — gratis</option>
+                <option value="groq/llama-3.3-70b-versatile">Llama 3.3 70B via Groq — gratis, ngebut</option>
+                <option value="__custom__">Tulis sendiri…</option>
+            </select>
+            <input id="modelCustom" type="text" placeholder="Nama model, cth: openrouter/deepseek/deepseek-chat:free" style="flex:1;min-width:200px;padding:6px;display:none;">
+            <button class="start-btn" onclick="setModel()">Pasang Model &amp; Restart Bot</button>
+        </div>
+        <div id="modelStatus" style="margin-top:8px;font-size:0.9em;opacity:0.85;"></div>
     </div>
 
     <div class="page-footer">
@@ -1029,6 +1044,8 @@
             });
         }
 
+        refreshCurrentModel();
+
         socket.on('agents-status', async (agents) => {
             // Fetch settings for all agents that don't have current settings
             const needSettings = agents.filter(a => !agentSettings[a.name]);
@@ -1126,6 +1143,42 @@
                     setTimeout(() => { status.textContent = 'Key aktif — bot sudah jalan lagi dengan key baru.'; }, 4000);
                 } else {
                     status.textContent = 'Gagal memasang key: ' + ((res && res.error) || 'tidak diketahui');
+                }
+            });
+        }
+
+        function onModelSelectChange() {
+            const sel = document.getElementById('modelSelect');
+            const inp = document.getElementById('modelCustom');
+            inp.style.display = sel.value === '__custom__' ? '' : 'none';
+            if (sel.value === '__custom__') inp.focus();
+        }
+
+        async function refreshCurrentModel() {
+            try {
+                const r = await fetch('/current-model');
+                const d = await r.json();
+                if (d && d.model) {
+                    document.getElementById('modelStatus').textContent = 'Model aktif sekarang: ' + d.model;
+                    const sel = document.getElementById('modelSelect');
+                    const known = Array.from(sel.options).some(o => o.value === d.model);
+                    if (known) sel.value = d.model;
+                }
+            } catch (e) { /* abaikan */ }
+        }
+
+        function setModel() {
+            const sel = document.getElementById('modelSelect');
+            const inp = document.getElementById('modelCustom');
+            const model = sel.value === '__custom__' ? inp.value.trim() : sel.value;
+            const status = document.getElementById('modelStatus');
+            if (!model) { status.textContent = 'Nama modelnya masih kosong.'; return; }
+            socket.emit('set-model', model, (res) => {
+                if (res && res.success) {
+                    status.textContent = 'Model dipasang: ' + model + ' — bot di-restart, tunggu sebentar…';
+                    currentAgents.forEach(a => socket.emit('start-agent', a.name));
+                } else {
+                    status.textContent = 'Gagal memasang model: ' + ((res && res.error) || 'tidak diketahui');
                 }
             });
         }
