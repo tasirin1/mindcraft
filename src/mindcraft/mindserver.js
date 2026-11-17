@@ -206,6 +206,22 @@ export function createMindServer(host_public = false, port = 8080) {
             agent_connections[agentName].socket.emit('chat-message', curAgentName, json);
         });
 
+        // API key dipasang dari panel web: hanya hidup di memori proses ini
+        // (tidak ditulis ke berkas/git) dan diwariskan ke proses agen yang
+        // dimulai/di-restart sesudahnya lewat process.env.
+        socket.on('set-api-key', (payload, callback) => {
+            const allowed = ['GEMINI_API_KEY', 'OPENROUTER_API_KEY'];
+            const name = payload && payload.name;
+            const key = payload && typeof payload.key === 'string' ? payload.key.trim() : '';
+            if (!allowed.includes(name) || !key) {
+                if (callback) callback({ success: false, error: 'Nama key tidak dikenal atau key kosong' });
+                return;
+            }
+            process.env[name] = key;
+            console.log(`API key ${name} dipasang lewat panel web (panjang ${key.length}); berlaku untuk proses agen berikutnya.`);
+            if (callback) callback({ success: true });
+        });
+
         socket.on('set-agent-settings', (agentName, settings) => {
             const agent = agent_connections[agentName];
             if (agent) {

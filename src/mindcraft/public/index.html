@@ -381,6 +381,19 @@
     </div>
     <div id="agents"></div>
 
+    <div id="apiKeyPanel" style="margin:16px auto;max-width:640px;padding:12px 16px;border:1px solid #444;border-radius:8px;">
+        <div style="font-weight:bold;margin-bottom:8px;">API Key AI (diisi di sini, tidak disimpan ke berkas)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <select id="apiKeyName" style="padding:6px;">
+                <option value="GEMINI_API_KEY">Gemini</option>
+                <option value="OPENROUTER_API_KEY">OpenRouter</option>
+            </select>
+            <input id="apiKeyInput" type="password" placeholder="Tempel API key di sini" style="flex:1;min-width:200px;padding:6px;">
+            <button class="start-btn" onclick="setApiKey()">Pasang Key &amp; Restart Bot</button>
+        </div>
+        <div id="apiKeyStatus" style="margin-top:8px;font-size:0.9em;opacity:0.85;"></div>
+    </div>
+
     <div class="page-footer">
         <div>
             <button id="openCreateAgentBtn" class="start-btn">New Agent</button>
@@ -1072,6 +1085,24 @@
         }
         function stopAgent(n) { socket.emit('stop-agent', n); }
         function destroyAgent(n) { socket.emit('destroy-agent', n); }
+        function setApiKey() {
+            const name = document.getElementById('apiKeyName').value;
+            const key = document.getElementById('apiKeyInput').value.trim();
+            const status = document.getElementById('apiKeyStatus');
+            if (!key) { status.textContent = 'Isi key-nya dulu ya.'; return; }
+            status.textContent = 'Memasang key...';
+            socket.emit('set-api-key', { name, key }, (res) => {
+                if (res && res.success) {
+                    document.getElementById('apiKeyInput').value = '';
+                    status.textContent = 'Key terpasang. Bot di-restart biar key-nya aktif...';
+                    currentAgents.forEach(a => socket.emit('start-agent', a.name));
+                    setTimeout(() => { status.textContent = 'Key aktif — bot sudah jalan lagi dengan key baru.'; }, 4000);
+                } else {
+                    status.textContent = 'Gagal memasang key: ' + ((res && res.error) || 'tidak diketahui');
+                }
+            });
+        }
+
         function disconnectAllAgents() { 
             socket.emit('stop-all-agents'); 
         }
