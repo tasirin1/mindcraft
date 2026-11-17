@@ -4,7 +4,7 @@ import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as mindcraft from './mindcraft.js';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Mindserver is:
@@ -53,6 +53,23 @@ export function createMindServer(host_public = false, port = 8080) {
     // Serve static files
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     app.use(express.static(path.join(__dirname, 'public')));
+
+    // Alamat publik tampilan POV bot (viewer prismarine di port 3000+).
+    // Panel mengambil alamat ini untuk iframe POV-nya: di lokal tidak
+    // dipakai (panel memakai localhost), di Colab/hosting alamat tunnel
+    // viewer ditulis notebook ke berkas viewer_url.txt di akar repo
+    // (atau env VIEWER_PUBLIC_URL) karena iframe localhost tidak
+    // terjangkau dari HP pengguna.
+    app.get('/viewer-url', (req, res) => {
+        let url = process.env.VIEWER_PUBLIC_URL || '';
+        if (!url) {
+            try {
+                const f = path.join(process.cwd(), 'viewer_url.txt');
+                if (existsSync(f)) url = readFileSync(f, 'utf8').trim();
+            } catch { /* abaikan */ }
+        }
+        res.json({ url });
+    });
 
     // Texture proxy: resolve item/block textures using minecraft-assets with version fallback
     app.get('/assets/item/:agent/:name.png', async (req, res) => {
