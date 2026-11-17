@@ -390,6 +390,32 @@
             .msg-input, select, input[type="text"], input[type="password"] { font-size: 16px; }
             .controls-row .neutral-btn, .controls-row .start-btn, .controls-row .stop-btn { flex: 1 1 auto; margin-left: 0; }
         }
+        /* Halaman chat khusus (gaya ChatGPT) — Alive 2026-11-17 atas perintah owner */
+        .chat-page {
+            position: fixed; inset: 0; background: #1e1e1e; z-index: 1200;
+            display: none; flex-direction: column;
+        }
+        .chat-page.open { display: flex; }
+        .chat-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; background: #2d2d2d; border-bottom: 1px solid #3a3a3a;
+        }
+        .chat-messages { flex: 1 1 auto; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .chat-row { display: flex; }
+        .chat-row.user { justify-content: flex-end; }
+        .chat-row.bot { justify-content: flex-start; }
+        .chat-bubble {
+            max-width: 82%; padding: 8px 12px; border-radius: 14px;
+            white-space: pre-wrap; word-break: break-word; line-height: 1.35;
+        }
+        .chat-row.user .chat-bubble { background: #2f6db3; color: #fff; border-bottom-right-radius: 4px; }
+        .chat-row.bot .chat-bubble { background: #333; color: #e8e8e8; border-bottom-left-radius: 4px; }
+        .chat-note { align-self: center; font-size: 0.8em; color: #999; font-style: italic; text-align: center; }
+        .chat-input-bar {
+            display: flex; gap: 8px; padding: 10px 12px;
+            background: #2d2d2d; border-top: 1px solid #3a3a3a;
+        }
+        .chat-input-bar .msg-input { flex: 1 1 auto; min-width: 0; padding: 10px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -707,6 +733,7 @@
             if (messageDiv) {
                 messageDiv.textContent = message;
             }
+            pushChatHistory(agentName, isChatNote(message) ? 'note' : 'bot', message);
         });
 
         // Subscribe to aggregated state updates (re-sent on each connect)
@@ -975,6 +1002,7 @@
                                 <span><span class="status-icon ${agent.in_game ? 'online' : 'offline'}">●</span>${agent.name}${agent.socket_connected && !agent.in_game ? '<span style="margin-left:6px;color:#f0ad4e;">joining...</span>' : ''}
                                     <button class="gear-btn" title="Settings" onclick="openAgentSettings('${agent.name}')">⚙</button>
                                     <button class="gear-btn" title="Inventory" onclick="toggleDetails('${agent.name}')">Inventory</button>
+                                    <button class="gear-btn" title="Chat" onclick="openChatPage('${agent.name}')">💬 Chat</button>
                                 </span>
                             </div>
                             ${showViewer ? `<div class="cell" style="grid-row: span 3; padding:0;">${viewerHTML}</div>` : ''}
@@ -1224,9 +1252,64 @@
             input.value = '';
         }
 
+        // ===== Halaman chat (Alive 2026-11-17) =====
+        const chatHistory = {};
+        let chatPageAgent = null;
+
+        function isChatNote(text) {
+            return /^\s*[⚙*]/.test(text) || text.includes(' used !');
+        }
+
+        function pushChatHistory(name, who, text) {
+            if (!text || !String(text).trim()) return;
+            (chatHistory[name] = chatHistory[name] || []).push({ who, text: String(text) });
+            if (chatHistory[name].length > 200) chatHistory[name].shift();
+            if (chatPageAgent === name) renderChatMessages();
+        }
+
+        function renderChatMessages() {
+            const box = document.getElementById('chatMessages');
+            if (!box || !chatPageAgent) return;
+            const items = chatHistory[chatPageAgent] || [];
+            box.innerHTML = items.map(it => {
+                if (it.who === 'note') return `<div class="chat-note"></div>`;
+                return `<div class="chat-row ${it.who}"><div class="chat-bubble"></div></div>`;
+            }).join('');
+            const rows = box.children;
+            items.forEach((it, i) => {
+                const el = rows[i];
+                if (!el) return;
+                if (it.who === 'note') el.textContent = it.text;
+                else el.firstElementChild.textContent = it.text;
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function openChatPage(name) {
+            chatPageAgent = name;
+            document.getElementById('chatPageTitle').textContent = '💬 ' + name;
+            document.getElementById('chatPage').classList.add('open');
+            renderChatMessages();
+            setTimeout(() => document.getElementById('chatPageInput').focus(), 50);
+        }
+
+        function closeChatPage() {
+            document.getElementById('chatPage').classList.remove('open');
+            chatPageAgent = null;
+        }
+
+        function sendChatFromPage() {
+            const input = document.getElementById('chatPageInput');
+            const text = input.value.trim();
+            if (!text || !chatPageAgent) return;
+            input.value = '';
+            sendMessage(chatPageAgent, text);
+        }
+
         function sendMessage(n, m) {
             if (!m || !m.trim()) return;
             socket.emit('send-message', n, { from: 'ADMIN', message: m });
+            pushChatHistory(n, 'user', m);
             const input = document.getElementById(`messageInput-${n}`);
             const btn = document.getElementById(`sendBtn-${n}`);
             if (input) input.value = '';
@@ -1250,5 +1333,17 @@
         }
         window.toggleDetails = toggleDetails;
     </script>
+    <!-- Halaman Chat (Alive 2026-11-17) -->
+    <div id="chatPage" class="chat-page">
+        <div class="chat-header">
+            <button class="neutral-btn" onclick="closeChatPage()">← Kembali</button>
+            <strong id="chatPageTitle">Chat</strong>
+        </div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input-bar">
+            <input class="msg-input" type="text" id="chatPageInput" placeholder="Tulis pesan buat bot…" onkeydown="if(event.key === 'Enter') sendChatFromPage()">
+            <button class="start-btn" onclick="sendChatFromPage()">Kirim</button>
+        </div>
+    </div>
 </body>
 </html> 
