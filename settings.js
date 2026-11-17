@@ -1,7 +1,7 @@
 const settings = {
     "minecraft_version": process.env.MINECRAFT_VERSION || "auto",
-    "host": process.env.MINECRAFT_HOST || "mishcreative.aternos.me",
-    "port": Number(process.env.MINECRAFT_PORT) || 58495,
+    "host": process.env.MINECRAFT_HOST || "127.0.0.1",
+    "port": Number(process.env.MINECRAFT_PORT) || 55916,
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI

@@ -40,6 +40,14 @@ if (process.env.NUM_EXAMPLES) settings.num_examples = process.env.NUM_EXAMPLES;
 if (process.env.LOG_ALL) settings.log_all_prompts = process.env.LOG_ALL;
 
 
+// Di hosting, port publik (env PORT) dipakai Mindserver UI supaya panel
+// web (termasuk chat ke bot di server) bisa dibuka dari internet.
+// Health-check Express di bawah TIDAK boleh memakai port yang sama.
+if (process.env.PORT) {
+    settings.mindserver_port = Number(process.env.PORT);
+    console.log(`Mindserver UI jalan di port publik: ${settings.mindserver_port}`);
+}
+
 Mindcraft.init(true, settings.mindserver_port, settings.auto_open_ui);
 
 for (let profile of settings.profiles) {
@@ -58,7 +66,7 @@ app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => {
     res.send('<h1>🟢 Mish_AI is alive!</h1><p>Bot Minecraft lagi aktif nih sayang~ ❤️</p>');
 });
-const port = process.env.PORT || 8080;
+const port = Number(process.env.HEALTH_PORT) || 8081;
 app.listen(port, '0.0.0.0', () => {
     console.log(`Health check server jalan di port ${port}`);
 });

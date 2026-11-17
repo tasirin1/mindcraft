@@ -1,8 +1,1 @@
-{
-  "name": "Mish_AI",
-  "init_commands": ["/joinq survival1"],
-  "password": "password_kamu",
-  "auto_login": true,
-  "spawn_timeout": 60
-  
-}
+{"name":"Mish_AI","spawn_timeout":60}

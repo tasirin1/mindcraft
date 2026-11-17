@@ -82,7 +82,8 @@ Panduan pemakaian umum (instalasi, profil, tugas) ada di `README.md` dan
 
 - **Alur utama**: `main.js` → `Mindserver` (port 8080, UI web) → tiap
   profil = satu `Agent` di proses terpisah → bot Mineflayer nyambung ke
-  server Minecraft (bawaan fork: Aternos, lihat kustomisasi fork).
+  server Minecraft (tujuan diisi env `MINECRAFT_HOST`/`MINECRAFT_PORT`;
+  bawaan lokal 127.0.0.1:55916 — lihat kustomisasi fork).
 - **Jawab chat**: pesan masuk → `Agent.handleMessage()` → LLM membalas
   teks + boleh menyisipkan `!perintah(arg)` → `ActionManager`
   menjalankannya → hasil kembali ke LLM sebagai pesan sistem.
@@ -111,12 +112,12 @@ kebanyakan lewat editor web GitHub) yang sengaja dipertahankan:
 
 | Bagian | Isi kustomisasi | Catatan |
 |---|---|---|
-| `settings.js` | `minecraft_version`/`host`/`port` dari env (`MINECRAFT_VERSION`/`MINECRAFT_HOST`/`MINECRAFT_PORT`); bawaan host `mishcreative.aternos.me` port `58495`, `auth: "offline"` | Server Aternos owner; port Aternos bisa berubah — cek env dulu sebelum menyalahkan kode |
+| `settings.js` | `minecraft_version`/`host`/`port` dari env (`MINECRAFT_VERSION`/`MINECRAFT_HOST`/`MINECRAFT_PORT`); bawaan `127.0.0.1` port `55916`, `auth: "offline"` | Config server lama (Aternos `mishcreative.aternos.me:58495`) DIHAPUS owner 2026-11-17 — server tujuan sekarang diisi lewat env, jangan hardcode alamat server di kode |
 | `settings.js` | `language: "id"`, `init_message: "Aku udah spawn"`, `max_messages: 10`, `num_examples: 1`, `max_commands: 3` | Bawaan upstream: en / 15 / 2 / -1. Batas diperketat demi hemat biaya |
 | `settings.js` | Blok `SETTINGS_JSON` dipindah ke dalam `settings.js` (di upstream ada di `main.js`) | Jangan diduplikasi di dua tempat |
-| `main.js` | `Mindcraft.init(true, ...)` (upstream `false`), override model via env `BOT_MODEL`, server Express health-check (`GET /health`, `GET /` → "Mish_AI is alive!") di `PORT` | Untuk hosting yang butuh port HTTP terbuka (pola Koyeb/Render) |
+| `main.js` | `Mindcraft.init(true, ...)` (upstream `false`), override model via env `BOT_MODEL`, env `PORT` menjadi port Mindserver UI (supaya panel web + chat ke server terbuka di alamat publik hosting), server Express health-check (`GET /health`, `GET /` → "Mish_AI is alive!") di port `HEALTH_PORT` (bawaan `8081`, JANGAN 8080 — tabrakan dengan mindserver) | Pola hosting Koyeb/Render: satu port publik = UI Mindserver; health-check cukup di port internal terpisah (diatur owner 2026-11-17) |
 | `andy.json` | `name: "Mish_AI"`, `model: ""` | Model KOSONG disengaja: diisi `BOT_MODEL` saat jalan. Tanpa env itu bot tidak punya otak |
-| `ai.json` | Profil `Mish_AI` + `init_commands: ["/joinq survival1"]`, `auto_login`, `spawn_timeout: 60` | **Bidang `init_commands`/`auto_login`/`password` TIDAK dirujuk `src/` mana pun** (terverifikasi grep 2026-11-17) — jangan dianggap berfungsi; profil ini juga belum aktif di `settings.js` |
+| `ai.json` | Profil `Mish_AI` + `spawn_timeout: 60` | Bidang server lama (`init_commands: ["/joinq survival1"]`, `auto_login`, `password`) DIHAPUS owner 2026-11-17 — bidang itu juga tidak dirujuk `src/` mana pun. Profil ini belum aktif di `settings.js` |
 | `package.json` | `pg` ditambahkan; `eslint`, `@eslint/js`, `eslint-plugin-no-floating-promise`, `globals`, `minecraft-assets` dihapus dari dependensi | Akibat: lint lokal dari `coder.js` bisa gagal modul hilang — kembalikan dependensi lint bila menyentuh jalur `!newAction` |
 | `key.json` | Template semua kunci KOSONG, nama tunggal | Yang dibaca kode = `keys.json` (jamak) atau env. Lihat Aturan No. 2 |
 
@@ -155,7 +156,7 @@ kebanyakan lewat editor web GitHub) yang sengaja dipertahankan:
 |---|---|---|
 | "My brain disconnected" / key tidak ditemukan | File bernama `key.json` (tunggal) padahal kode membaca `keys.json`; atau env belum disetel | Cek `src/utils/keys.js`: sumber key = `keys.json` ATAU env var bernama sama persis |
 | Bot tidak punya model | `andy.json` `model: ""` dan env `BOT_MODEL` kosong | Setel `BOT_MODEL` (mis. lewat env hosting) atau isi model di profil aktif |
-| `ECONNREFUSED` saat nyambung | Dunia LAN belum dibuka / port beda / port Aternos berubah | Samakan `host`/`port` di `settings.js`/env dengan server tujuan; bawaan LAN upstream 55916 |
+| `ECONNREFUSED` saat nyambung | Dunia LAN belum dibuka / port beda / env server belum disetel | Samakan `host`/`port` di `settings.js`/env dengan server tujuan; bawaan LAN 55916 |
 | `npm install` gagal (Python/C++/`gl`) | Node v24+ atau perkakas build hilang | Pakai Node 20 LTS (nvm); bila vision tidak dipakai: `npm install --no-optional` (lihat `FAQ.md`) |
 | Bot nyangkut berulang | Pathfinder Mineflayer tidak sempurna; patch tidak terpasang | Hapus `node_modules`, `npm install` ulang agar `patches/` terpasang; mode `unstuck` wajib aktif |
 | Bot spam ngobrol sendiri | Nama profil ≠ nama akun Minecraft (server microsoft-auth) | Samakan persis nama profil dengan akun bot |
@@ -286,7 +287,9 @@ aktif, dan (bila di hosting) `GET /health` membalas `OK`.
 | Keputusan | Alasan |
 |---|---|
 | Fork dikelola Alive sejak 2026-11-17 atas perintah owner "kelola repository mirip repository lainnya, tambahkan AGENTS.md" | Sebelumnya fork hanya diedit manual lewat web (2025-12-22/24) tanpa panduan agen dan tanpa file memori proyek |
-| Bot fork bernama `Mish_AI`, server tujuan Aternos `mishcreative.aternos.me` | Kustomisasi owner 2025-12-23/24 (dari isi `settings.js`/`ai.json` fork) |
+| Bot fork bernama `Mish_AI`, server tujuan Aternos `mishcreative.aternos.me` | Kustomisasi owner 2025-12-23/24 (dari isi `settings.js`/`ai.json` fork) — **config servernya DICABUT 2026-11-17 atas perintah owner ("hapus config untuk server lama"); nama bot tetap** |
+| Fork disinkronkan dari upstream 2026-11-17 (merge `c11ea53`: 72 commit upstream masuk, 0 tertinggal) | Perintah owner; konflik `andy.json`/`package.json`/`main.js` diselesaikan dengan mempertahankan kustomisasi fork; dependensi ESLint upstream diterima kembali |
+| Port publik hosting = Mindserver UI, health-check pindah ke 8081 | Perintah owner 2026-11-17 "usahakan agar bisa chat di server lewat Web" — sebelumnya port publik hanya melayani halaman health-check sehingga panel chat tidak terjangkau, dan bawaan 8080 health-check bertabrakan dengan mindserver |
 | Model diisi lewat env `BOT_MODEL`, bukan di profil | `andy.json` model kosong disengaja pada kustomisasi fork; memudahkan ganti model di hosting tanpa commit |
 | Batas konteks diperketat (10 pesan, 1 contoh, maks 3 perintah) | Hemat biaya API — keputusan kustomisasi fork 2025-12-24 |
 | Health-check Express di `main.js` | Hosting pola Koyeb/Render menuntut port HTTP terbuka agar layanan dianggap hidup |
