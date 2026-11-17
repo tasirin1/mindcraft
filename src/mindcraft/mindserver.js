@@ -254,14 +254,17 @@ export function createMindServer(host_public = false, port = 8080) {
         // model ditulis ke setelan profil tiap agen di memori mindserver
         // (+ env BOT_MODEL), lalu UI me-restart agen agar model baru
         // terbaca proses agen berikutnya. Tidak ditulis ke berkas/git.
-        socket.on('set-model', (model, callback) => {
-            const m = typeof model === 'string' ? model.trim() : '';
+        socket.on('set-model', (payload, callback) => {
+            const isObj = payload && typeof payload === 'object';
+            const m = (isObj ? payload.model : payload || '').toString().trim();
+            const onlyAgent = isObj ? payload.agentName : null;
             if (!m || m.length > 120 || /\s/.test(m)) {
                 if (callback) callback({ success: false, error: 'Nama model tidak valid' });
                 return;
             }
             let changed = 0;
             for (let name in agent_connections) {
+                if (onlyAgent && name !== onlyAgent) continue;
                 const prof = agent_connections[name].settings?.profile;
                 if (prof) { prof.model = m; changed++; }
             }
