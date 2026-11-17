@@ -38,7 +38,7 @@ const settings = {
 
     "chat_ingame": true, // bot responses are shown in minecraft chat
     "language": "id", // translate to/from this language. Supports these language names: https://cloud.google.com/translate/docs/languages
-    "render_bot_view": true, // show bot's view in browser at localhost:3000, 3001...
+    "render_bot_view": false, // POV bot di panel — bawaan MATI atas keputusan owner 2026-11-17 (panel fokus ke riwayat chat + status; POV berat dirender di HP). Nyalakan lagi lewat Agent Settings bila perlu
 
     "allow_insecure_coding": false, // allows newAction command and model can write/run code on your computer. enable at own risk
     "allow_vision": false, // allows vision model to interpret screenshots as inputs

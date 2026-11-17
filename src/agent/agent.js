@@ -184,7 +184,15 @@ export class Agent {
         this.bot.on('chat', (username, message) => {
             if (serverProxy.getNumOtherAgents() > 0) return;
             // only respond to open chat messages when there are no other agents
-            respondFunc(username, message);
+            // Gerbang sebutan (keputusan owner 2026-11-17): chat publik hanya
+            // diproses bila menyebut nama bot, mis. "@Mish_AI ikut aku".
+            // Obrolan pemain lain diabaikan SEBELUM sampai ke AI — token
+            // tidak boros. Whisper dan panel web TIDAK lewat gerbang ini.
+            const nameLower = this.name.toLowerCase();
+            const idx = message.toLowerCase().indexOf(nameLower);
+            if (idx === -1) return;
+            const cleaned = (message.slice(0, idx) + message.slice(idx + this.name.length)).replace(/^\s*@\s*/, '').trim();
+            respondFunc(username, cleaned || message);
         });
 
         // Set up auto-eat
