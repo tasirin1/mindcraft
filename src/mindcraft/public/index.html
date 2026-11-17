@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Mindcraft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="/socket.io/socket.io.js"></script>
     <style>
         body {
@@ -1234,6 +1235,7 @@
             }).catch(() => {});
         }
         setInterval(refreshAiStatus, 15000);
+        setTimeout(refreshAiStatus, 1000);
 
         async function refreshCurrentModel() {
             try {
