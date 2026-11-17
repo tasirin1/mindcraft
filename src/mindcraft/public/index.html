@@ -965,6 +965,12 @@
                             <button class="neutral-btn" ${agent.in_game ? `onclick=\"disconnectAgent('${agent.name}')\"` : (agent.socket_connected ? 'disabled' : `onclick=\"startAgent('${agent.name}')\"`)}>${agent.in_game ? 'Disconnect' : (agent.socket_connected ? 'Connecting...' : 'Connect')}</button>
                             <button class="stop-btn" onclick="destroyAgent('${agent.name}')">Remove</button>
                         </div>
+                        <div class="controls-row">
+                            <input class="msg-input" type="text" id="commandInput-${agent.name}" placeholder="Perintah server, cth: /joinq survival1 (langsung ke server, tanpa AI)"
+                                onkeydown="if(event.key === 'Enter') sendServerCommand('${agent.name}')"
+                                ${!agent.in_game ? 'disabled' : ''}>
+                            <button class="neutral-btn" onclick="sendServerCommand('${agent.name}')" ${!agent.in_game ? 'disabled' : ''}>Kirim Perintah</button>
+                        </div>
                     </div>`;
         }
 
@@ -1125,6 +1131,15 @@
                 socket.emit('shutdown');
             }
         }
+        function sendServerCommand(name) {
+            const input = document.getElementById(`commandInput-${name}`);
+            if (!input) return;
+            const command = input.value.trim();
+            if (!command) return;
+            socket.emit('send-server-command', name, command);
+            input.value = '';
+        }
+
         function sendMessage(n, m) {
             if (!m || !m.trim()) return;
             socket.emit('send-message', n, { from: 'ADMIN', message: m });

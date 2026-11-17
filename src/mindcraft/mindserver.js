@@ -288,6 +288,20 @@ export function createMindServer(host_public = false, port = 8080) {
             
         });
 
+		// Perintah server mentah dari panel web (mis. /joinq survival1 buat
+		// pindah dunia di server berlobi): diteruskan apa adanya ke agen,
+		// TIDAK lewat AI — nol token.
+		socket.on('send-server-command', (agentName, command) => {
+			if (!agent_connections[agentName]) {
+				console.warn(`Agent ${agentName} not in game, cannot send server command via MindServer.`);
+                return;
+			}
+			const cmd = typeof command === 'string' ? command.trim() : '';
+			if (!cmd) return;
+			console.log(`Meneruskan perintah server dari panel ke ${agentName}: ${cmd}`);
+			agent_connections[agentName].socket.emit('send-server-command', { command: cmd });
+		});
+
 		socket.on('send-message', (agentName, data) => {
 			if (!agent_connections[agentName]) {
 				console.warn(`Agent ${agentName} not in game, cannot send message via MindServer.`);

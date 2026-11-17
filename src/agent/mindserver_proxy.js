@@ -61,6 +61,18 @@ class MindServerProxy {
             this.agent.cleanKill();
         });
 		
+        this.socket.on('send-server-command', (data) => {
+            try {
+                const command = (data && typeof data.command === 'string') ? data.command.trim() : '';
+                if (!command) return;
+                console.log(`Server command dari panel web: ${command}`);
+                this.agent.bot.chat(command);
+                sendOutputToServer(this.agent.name, `\u2699\uFE0F Perintah server dikirim: ${command}`);
+            } catch (error) {
+                console.error('Error send-server-command: ', error);
+            }
+        });
+
         this.socket.on('send-message', (data) => {
             try {
                 this.agent.respondFunc(data.from, data.message);
