@@ -273,6 +273,45 @@ export function createMindServer(host_public = false, port = 8080) {
             if (callback) callback({ success: true, model: m, agents: changed });
         });
 
+        // Ganti nama bot dari panel web (Alive, perintah owner 2026-11-17):
+        // nama = settings.profile.name. Bot lama dihancurkan, dibuat ulang
+        // dengan setelan yang sama persis tetapi nama baru, lalu langsung
+        // jalan (createAgent memang auto-start). Nama mengikuti aturan
+        // username Minecraft: 3-16 huruf/angka/garis bawah.
+        socket.on('rename-agent', async (oldName, newName, callback) => {
+            const nn = typeof newName === 'string' ? newName.trim() : '';
+            if (!/^[A-Za-z0-9_]{3,16}$/.test(nn)) {
+                if (callback) callback({ success: false, error: 'Nama harus 3-16 huruf/angka/garis bawah (aturan Minecraft)' });
+                return;
+            }
+            const entry = agent_connections[oldName];
+            if (!entry) {
+                if (callback) callback({ success: false, error: 'Bot tidak ditemukan' });
+                return;
+            }
+            if (nn === oldName) {
+                if (callback) callback({ success: false, error: 'Nama barunya sama saja' });
+                return;
+            }
+            if (nn in agent_connections) {
+                if (callback) callback({ success: false, error: 'Nama itu sudah dipakai bot lain' });
+                return;
+            }
+            const newSettings = JSON.parse(JSON.stringify(entry.settings));
+            newSettings.profile.name = nn;
+            mindcraft.destroyAgent(oldName);
+            delete agent_connections[oldName];
+            const returned = await mindcraft.createAgent(newSettings);
+            if (!returned.success) {
+                if (callback) callback({ success: false, error: returned.error || 'Gagal membuat bot bernama baru' });
+                agentsStatusUpdate();
+                return;
+            }
+            console.log(`Nama bot diganti dari panel web: ${oldName} -> ${nn}`);
+            agentsStatusUpdate();
+            if (callback) callback({ success: true });
+        });
+
         socket.on('set-agent-settings', (agentName, settings) => {
             const agent = agent_connections[agentName];
             if (agent) {

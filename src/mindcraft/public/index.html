@@ -498,6 +498,13 @@
             <button class="start-btn" onclick="setModel()">Pasang Model &amp; Restart Bot</button>
         </div>
         <div id="modelStatus" style="margin-top:8px;font-size:0.9em;opacity:0.85;"></div>
+        <h3 style="margin:14px 0 6px 0;">Nama Bot</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input class="msg-input" type="text" id="botNameInput" maxlength="16" style="flex:1 1 160px;" placeholder="Nama baru bot">
+            <button class="start-btn" onclick="renameBot()">Ganti Nama & Restart Bot</button>
+        </div>
+        <div style="font-size:0.85em;color:#aaa;margin-top:4px;">Aturan Minecraft: 3-16 huruf/angka/garis bawah. Nama ini juga jadi nama panggilan bot di dalam game.</div>
+        <div id="botNameStatus" style="margin-top:6px;font-size:0.9em;color:#9c9;"></div>
     </div>
                 <div id="agentSettingsSection">
                     <div id="agentSettingsForm"></div>
@@ -893,6 +900,10 @@
                 buildAgentSettingsForm(settings || {});
                 agentSettingsModal.style.display = 'flex';
                 refreshCurrentModel();
+                const bn = document.getElementById('botNameInput');
+                if (bn) bn.value = name;
+                const bs = document.getElementById('botNameStatus');
+                if (bs) bs.textContent = '';
             });
         }
         window.openAgentSettings = openAgentSettings;
@@ -1216,6 +1227,26 @@
                     if (known) sel.value = d.model;
                 }
             } catch (e) { /* abaikan */ }
+        }
+
+        function renameBot() {
+            const input = document.getElementById('botNameInput');
+            const status = document.getElementById('botNameStatus');
+            const nn = input.value.trim();
+            if (!currentAgentName) { status.textContent = 'Buka setelan agen dulu.'; return; }
+            if (!/^[A-Za-z0-9_]{3,16}$/.test(nn)) { status.textContent = 'Nama harus 3-16 huruf/angka/garis bawah.'; return; }
+            if (nn === currentAgentName) { status.textContent = 'Nama barunya sama saja.'; return; }
+            const oldName = currentAgentName;
+            status.textContent = 'Mengganti nama… bot lama berhenti, bot baru jalan.';
+            socket.emit('rename-agent', oldName, nn, (res) => {
+                if (res && res.success) {
+                    status.textContent = 'Berhasil! Bot sekarang bernama ' + nn + '.';
+                    if (chatPageAgent === oldName) closeChatPage();
+                    setTimeout(() => closeAgentSettings(), 1200);
+                } else {
+                    status.textContent = 'Gagal: ' + ((res && res.error) || 'tidak diketahui');
+                }
+            });
         }
 
         function setModel() {
