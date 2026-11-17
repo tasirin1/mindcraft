@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ruang Kendali — Sopir</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; }
+        .topbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; background: #161b22; border-bottom: 1px solid #30363d; }
+        .topbar h1 { font-size: 17px; margin: 0; }
+        .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #6e2b2b; color: #ffb4b4; }
+        .badge.on { background: #1d4d2b; color: #a7f3c0; }
+        select, input[type="text"] { background: #0d1117; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-size: 15px; }
+        button { background: #21262d; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; font-size: 14px; cursor: pointer; min-height: 38px; }
+        button:hover { background: #30363d; }
+        button:disabled { opacity: .45; cursor: default; }
+        button.primary { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+        a { color: #58a6ff; text-decoration: none; font-size: 14px; }
+        .wrap { max-width: 980px; margin: 0 auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .screen { position: relative; background: #000; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; aspect-ratio: 16 / 9; }
+        .screen iframe { width: 100%; height: 100%; border: 0; display: block; }
+        .screen .off { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px; color: #9da7b3; font-size: 14px; line-height: 1.5; }
+        .gauges { display: flex; flex-wrap: wrap; gap: 8px; }
+        .gauge { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 6px 10px; font-size: 14px; }
+        .panel { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px; }
+        .panel h2 { font-size: 14px; margin: 0 0 8px; color: #9da7b3; font-weight: 600; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .row input { flex: 1; min-width: 180px; }
+        #log { height: 180px; overflow-y: auto; font-family: ui-monospace, monospace; font-size: 12.5px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+        #log .sys { color: #9da7b3; }
+        .foot { font-size: 12px; color: #9da7b3; line-height: 1.5; padding: 0 2px 8px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>🚗 Ruang Kendali Sopir</h1>
+        <span id="msBadge" class="badge">mindserver offline</span>
+        <select id="agentSelect" title="Pilih bot"></select>
+        <span id="gameBadge" class="badge">bot belum masuk dunia</span>
+        <span style="flex:1"></span>
+        <a href="index.html">← Panel utama</a>
+    </div>
+    <div class="wrap">
+        <div class="screen">
+            <iframe id="pov" title="POV bot" style="display:none"></iframe>
+            <div class="off" id="povOff">Layar POV belum tampil.<br>Bot harus sudah masuk dunia dan POV (render_bot_view) dinyalakan di ⚙ panel utama.</div>
+        </div>
+        <div class="gauges">
+            <span class="gauge" id="gHealth">❤️ -</span>
+            <span class="gauge" id="gHunger">🍗 -</span>
+            <span class="gauge" id="gPos">📍 -</span>
+            <span class="gauge" id="gBiome">🌲 -</span>
+            <span class="gauge" id="gMode">🎮 -</span>
+            <span class="gauge" id="gAi">🤖 -</span>
+        </div>
+        <div class="panel">
+            <h2>LOG BOT</h2>
+            <div id="log"></div>
+        </div>
+        <div class="panel">
+            <h2>NGOMONG SEBAGAI BOT (suara sopir di chat game — tanpa AI)</h2>
+            <div class="row">
+                <input type="text" id="speakInput" placeholder="cth: halo semua, aku lagi jalan-jalan nih">
+                <button class="primary" id="speakBtn">Ngomong</button>
+            </div>
+        </div>
+        <div class="panel">
+            <h2>PERINTAH SERVER (langsung ke server, tanpa AI)</h2>
+            <div class="row">
+                <input type="text" id="cmdInput" placeholder="cth: /time set day atau /joinq survival1">
+                <button class="primary" id="cmdBtn">Kirim Perintah</button>
+            </div>
+            <div class="row" style="margin-top:8px">
+                <button data-quickcmd="/time set day">☀️ Siang</button>
+                <button data-quickcmd="/time set night">🌙 Malam</button>
+                <button data-quickcmd="/weather clear">🌤️ Cerah</button>
+                <button data-quickcmd="/weather rain">🌧️ Hujan</button>
+            </div>
+        </div>
+        <div class="panel">
+            <h2>PERINTAH AKSI BOT (dijalankan proses bot dari pesan panel)</h2>
+            <div class="row">
+                <input type="text" id="actInput" placeholder="cth: !collectBlocks('oak_log', 5)">
+                <button class="primary" id="actBtn">Jalankan</button>
+            </div>
+            <div class="row" style="margin-top:8px">
+                <button data-quickact="!stop">⏹️ Stop Action</button>
+                <button data-quickact="!stay(-1)">🧍 Diam di Tempat</button>
+                <button id="restartBtn">🔄 Restart Bot</button>
+                <button id="connBtn">⏏️ Connect</button>
+            </div>
+        </div>
+        <div class="foot">
+            Halaman ini TANPA kata sandi, sama seperti panel utama — jangan bagikan alamatnya ke siapa pun.
+            Layar POV digambar oleh browser yang membuka halaman ini; buka halaman ini di browser sopir agar HP pemilik tetap ringan.
+        </div>
+    </div>
+    <script>
+        const socket = io({ path: '/socket.io' });
+        const $ = (id) => document.getElementById(id);
+        let agents = [];
+        let currentName = '';
+        let viewerPublicUrl = '';
+        const settingsCache = {};
+
+        function logLine(text, sys) {
+            const el = $('log');
+            const div = document.createElement('div');
+            if (sys) div.className = 'sys';
+            div.textContent = text;
+            el.appendChild(div);
+            while (el.children.length > 120) el.removeChild(el.firstChild);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        async function loadViewerUrl() {
+            try {
+                const r = await fetch('/viewer-url');
+                const d = await r.json();
+                if (d && d.url) viewerPublicUrl = d.url;
+            } catch (e) { /* abaikan */ }
+        }
+
+        function currentAgent() {
+            return agents.find(a => a.name === currentName) || null;
+        }
+
+        function fetchSettings(name) {
+            if (settingsCache[name]) return;
+            settingsCache[name] = {};
+            socket.emit('get-settings', name, (res) => {
+                if (res && res.settings) {
+                    settingsCache[name] = res.settings;
+                    refreshPov();
+                }
+            });
+        }
+
+        function refreshPov() {
+            const a = currentAgent();
+            const iframe = $('pov');
+            const off = $('povOff');
+            const cfg = settingsCache[currentName] || {};
+            const show = a && a.in_game && cfg.render_bot_view === true && a.viewerPort;
+            if (show) {
+                const src = viewerPublicUrl || ('http://localhost:' + a.viewerPort);
+                if (iframe.getAttribute('src') !== src) iframe.src = src;
+                iframe.style.display = 'block';
+                off.style.display = 'none';
+            } else {
+                iframe.style.display = 'none';
+                off.style.display = 'flex';
+                if (a && a.in_game && cfg.render_bot_view !== true) {
+                    off.innerHTML = 'Bot sudah di dalam dunia, tapi POV masih mati.<br>Nyalakan render_bot_view di ⚙ Agent Settings pada panel utama, lalu bot restart.';
+                } else if (a && !a.in_game) {
+                    off.innerHTML = 'Bot belum masuk dunia.<br>Layar POV tampil begitu bot joined dan POV dinyalakan.';
+                }
+            }
+            const gb = $('gameBadge');
+            if (a && a.in_game) { gb.textContent = '● ' + a.name + ' di dalam dunia'; gb.className = 'badge on'; }
+            else if (a && a.socket_connected) { gb.textContent = '◌ ' + a.name + ' lagi menyambung…'; gb.className = 'badge'; }
+            else { gb.textContent = 'bot belum masuk dunia'; gb.className = 'badge'; }
+            $('connBtn').textContent = a && a.in_game ? '⏏️ Disconnect' : '⏏️ Connect';
+            const dis = !(a && a.in_game);
+            ['speakBtn', 'cmdBtn', 'actBtn', 'restartBtn'].forEach(id => { $(id).disabled = dis; });
+            document.querySelectorAll('[data-quickcmd],[data-quickact]').forEach(b => { b.disabled = dis; });
+        }
+
+        function refreshAgentSelect() {
+            const sel = $('agentSelect');
+            const names = agents.map(a => a.name);
+            if (!names.includes(currentName)) currentName = names[0] || '';
+            sel.innerHTML = '';
+            names.forEach(n => {
+                const o = document.createElement('option');
+                o.value = n; o.textContent = n;
+                if (n === currentName) o.selected = true;
+                sel.appendChild(o);
+            });
+            if (currentName) fetchSettings(currentName);
+            refreshPov();
+        }
+
+        $('agentSelect').addEventListener('change', (e) => {
+            currentName = e.target.value;
+            $('log').innerHTML = '';
+            logLine('— ganti bot: ' + currentName + ' —', true);
+            if (currentName) fetchSettings(currentName);
+            refreshPov();
+            refreshAi();
+        });
+
+        socket.on('connect', () => {
+            $('msBadge').textContent = 'mindserver online';
+            $('msBadge').className = 'badge on';
+            socket.emit('listen-to-agents');
+            loadViewerUrl();
+            refreshAi();
+        });
+        socket.on('disconnect', () => {
+            $('msBadge').textContent = 'mindserver offline';
+            $('msBadge').className = 'badge';
+        });
+
+        socket.on('agents-status', (list) => {
+            agents = Array.isArray(list) ? list : [];
+            refreshAgentSelect();
+        });
+
+        socket.on('state-update', (states) => {
+            const st = states && states[currentName];
+            if (!st || st.error) return;
+            const gp = st.gameplay || {};
+            if (typeof gp.health === 'number') $('gHealth').textContent = '❤️ ' + gp.health + '/' + (gp.healthMax || 20);
+            if (typeof gp.hunger === 'number') $('gHunger').textContent = '🍗 ' + gp.hunger + '/' + (gp.hungerMax || 20);
+            if (gp.position) $('gPos').textContent = '📍 x ' + gp.position.x + ', y ' + gp.position.y + ', z ' + gp.position.z;
+            if (gp.biome) $('gBiome').textContent = '🌲 ' + gp.biome;
+            if (gp.gamemode) $('gMode').textContent = '🎮 ' + gp.gamemode;
+        });
+
+        socket.on('bot-output', (agentName, message) => {
+            if (agentName === currentName) logLine(message, false);
+        });
+
+        function refreshAi() {
+            fetch('/ai-status').then(r => r.json()).then(d => {
+                const realKeys = Object.entries(d.keys || {}).filter(([, v]) => v === 'asli').map(([k]) => k);
+                const model = (d.models && d.models[currentName]) || '-';
+                $('gAi').textContent = '🤖 ' + model + (realKeys.length ? ' · 🔑 ' + realKeys.join('+') + ' ✓' : ' · 🔑 belum ada key asli');
+            }).catch(() => {});
+        }
+        setInterval(refreshAi, 15000);
+
+        function sendSpeak() {
+            const v = $('speakInput').value.trim();
+            if (!v || !currentName) return;
+            socket.emit('send-server-command', currentName, v);
+            logLine('⚙️ Sopir ngomong sebagai bot: ' + v, true);
+            $('speakInput').value = '';
+        }
+        function sendCmd() {
+            const v = $('cmdInput').value.trim();
+            if (!v || !currentName) return;
+            socket.emit('send-server-command', currentName, v);
+            logLine('⚙️ Perintah server dikirim: ' + v, true);
+            $('cmdInput').value = '';
+        }
+        function sendAct() {
+            const v = $('actInput').value.trim();
+            if (!v || !currentName) return;
+            socket.emit('send-message', currentName, { from: 'ADMIN', message: v });
+            logLine('⚙️ Perintah aksi dikirim: ' + v, true);
+            $('actInput').value = '';
+        }
+        $('speakBtn').addEventListener('click', sendSpeak);
+        $('cmdBtn').addEventListener('click', sendCmd);
+        $('actBtn').addEventListener('click', sendAct);
+        $('speakInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendSpeak(); });
+        $('cmdInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCmd(); });
+        $('actInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAct(); });
+        document.querySelectorAll('[data-quickcmd]').forEach(b => b.addEventListener('click', () => {
+            if (!currentName) return;
+            socket.emit('send-server-command', currentName, b.getAttribute('data-quickcmd'));
+            logLine('⚙️ Perintah server dikirim: ' + b.getAttribute('data-quickcmd'), true);
+        }));
+        document.querySelectorAll('[data-quickact]').forEach(b => b.addEventListener('click', () => {
+            if (!currentName) return;
+            socket.emit('send-message', currentName, { from: 'ADMIN', message: b.getAttribute('data-quickact') });
+            logLine('⚙️ Perintah aksi dikirim: ' + b.getAttribute('data-quickact'), true);
+        }));
+        $('restartBtn').addEventListener('click', () => {
+            if (currentName) { socket.emit('restart-agent', currentName); logLine('⚙️ Restart bot diminta.', true); }
+        });
+        $('connBtn').addEventListener('click', () => {
+            const a = currentAgent();
+            if (!a) return;
+            if (a.in_game) { socket.emit('stop-agent', a.name); logLine('⚙️ Disconnect diminta.', true); }
+            else { socket.emit('start-agent', a.name); logLine('⚙️ Connect diminta.', true); }
+        });
+        loadViewerUrl();
+    </script>
+</body>
+</html>
