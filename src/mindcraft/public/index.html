@@ -877,11 +877,13 @@
             originalAgentSettings = null;
         }
 
+        let viewerPublicUrl = '';
         async function applyViewerUrl() {
             try {
                 const r = await fetch('/viewer-url');
                 const d = await r.json();
                 if (d && d.url) {
+                    viewerPublicUrl = d.url;
                     document.querySelectorAll('iframe.agent-viewer').forEach(f => {
                         if (f.src !== d.url) f.src = d.url;
                     });
@@ -924,7 +926,8 @@
             const cfg = agentSettings[agent.name] || {};
             const showViewer = agent.in_game && cfg.render_bot_view === true;
             const viewerPort = agent.viewerPort;
-            const viewerHTML = showViewer ? `<div class="agent-view-container"><iframe class="agent-viewer" id="viewer-${agent.name}" src="http://localhost:${viewerPort}"></iframe></div>` : '';
+            const viewerSrc = viewerPublicUrl || `http://localhost:${viewerPort}`;
+            const viewerHTML = showViewer ? `<div class="agent-view-container"><iframe class="agent-viewer" id="viewer-${agent.name}" src="${viewerSrc}"></iframe></div>` : '';
             const lastMessage = agentLastMessage[agent.name] || '';
             const invOpen = inventoryOpen[agent.name] === true;
             const invStyle = invOpen ? '' : 'display:none;';
@@ -1014,6 +1017,7 @@
                     if (agent.in_game) updateAgentViewer(agent.name);
                 }
             });
+            if (changedAgents.length) applyViewerUrl();
 
             // Remove cards for agents that no longer exist
             Array.from(agentsDiv.children).forEach(el => {
@@ -1055,6 +1059,8 @@
                     agents.forEach(a => {
                         if (a.in_game) updateAgentViewer(a.name);
                     });
+                    applyViewerUrl();
+                    setTimeout(applyViewerUrl, 5000);
                 }, 0);
                 return;
             }
@@ -1072,6 +1078,7 @@
                     if (agent.in_game) updateAgentViewer(agent.name);
                 }
             });
+            if (changedAgents.length) applyViewerUrl();
 
             // Remove cards for agents that no longer exist
             Array.from(agentsDiv.children).forEach(el => {
