@@ -28,6 +28,8 @@ if (args.task_path) {
 }
 
 // Env overrides
+// Catatan fork: blok SETTINGS_JSON sengaja TIDAK di sini — sudah ditangani
+// di settings.js (lihat AGENTS.md, tabel Kustomisasi fork; jangan duplikasi).
 if (process.env.MINECRAFT_PORT) settings.port = process.env.MINECRAFT_PORT;
 if (process.env.MINDSERVER_PORT) settings.mindserver_port = process.env.MINDSERVER_PORT;
 if (process.env.PROFILES && JSON.parse(process.env.PROFILES).length > 0) settings.profiles = JSON.parse(process.env.PROFILES);
@@ -36,6 +38,7 @@ if (process.env.BLOCKED_ACTIONS) settings.blocked_actions = JSON.parse(process.e
 if (process.env.MAX_MESSAGES) settings.max_messages = process.env.MAX_MESSAGES;
 if (process.env.NUM_EXAMPLES) settings.num_examples = process.env.NUM_EXAMPLES;
 if (process.env.LOG_ALL) settings.log_all_prompts = process.env.LOG_ALL;
+
 
 Mindcraft.init(true, settings.mindserver_port, settings.auto_open_ui);
 

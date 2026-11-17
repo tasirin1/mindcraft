@@ -1,6 +1,6 @@
 <h1 align="center">🧠mindcraft⛏️</h1>
 <h1 align="center">
-  <a href="https://trendshift.io/repositories/9163" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9163" alt="kolbytn%2Fmindcraft | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/14816" target="_blank"><img src="https://trendshift.io/api/badge/repositories/14816" alt="mindcraft-bots%2Fmindcraft | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 </h1>
 
 <p align="center">Crafting minds for Minecraft with LLMs and <a href="https://prismarinejs.github.io/mineflayer/#/">Mineflayer!</a></p>
@@ -10,7 +10,6 @@
   <a href="https://discord.gg/mp73p35dzC">Discord Support</a> | 
   <a href="https://www.youtube.com/watch?v=gRotoL8P8D8">Video Tutorial</a> | 
   <a href="https://kolbynottingham.com/mindcraft/">Blog Post</a> | 
-  <a href="https://github.com/users/kolbytn/projects/1">Contributor TODO</a> | 
   <a href="https://mindcraft-minecollab.github.io/index.html">Paper Website</a> | 
   <a href="https://github.com/mindcraft-bots/mindcraft/blob/main/minecollab.md">MineCollab</a>
 </p>
@@ -21,7 +20,7 @@ Do not connect this bot to public servers with coding enabled. This project allo
 # Getting Started
 ## Requirements
 
-- [Minecraft Java Edition](https://www.minecraft.net/en-us/store/minecraft-java-bedrock-edition-pc) (up to v1.21.6, recommend v1.21.6)
+- [Minecraft Java Edition](https://www.minecraft.net/en-us/store/minecraft-java-bedrock-edition-pc) (up to v1.21.11, recommend v1.21.6)
 - [Node.js Installed](https://nodejs.org/) (Node v18 or v20 LTS recommended. Node v24+ may cause issues with native dependencies)
 - At least one API key from a supported API provider. See [supported APIs](#model-customization). OpenAI is the default.
 
@@ -72,7 +71,6 @@ You can configure the agent's name, model, and prompts in their profile like `an
 | `huggingface` | `HUGGINGFACE_API_KEY` | [docs](https://huggingface.co/models) |
 | `novita` | `NOVITA_API_KEY` | [docs](https://novita.ai/model-api/product/llm-api?utm_source=github_mindcraft&utm_medium=github_readme&utm_campaign=link) |
 | `openrouter` | `OPENROUTER_API_KEY` | [docs](https://openrouter.ai/models) |
-| `glhf` | `GHLF_API_KEY` | [docs](https://glhf.chat/user-settings/api) |
 | `hyperbolic` | `HYPERBOLIC_API_KEY` | [docs](https://docs.hyperbolic.xyz/docs/getting-started) |
 | `vllm` | n/a | n/a |
 | `cerebras` | `CEREBRAS_API_KEY` | [docs](https://inference-docs.cerebras.ai/introduction) |
@@ -104,7 +102,7 @@ To use different accounts, Mindcraft will connect with the account that the Mine
 
 ## Tasks
 
-Tasks automatically start the bot with a prompt and a goal item to aquire or blueprint to construct. To run a simple task that involves collecting 4 oak_logs run 
+Tasks automatically start the bot with a prompt and a goal item to acquire or blueprint to construct. To run a simple task that involves collecting 4 oak_logs run 
 
 `node main.js --task_path tasks/basic/single_agent.json --task_id gather_oak_logs`
 
@@ -170,14 +168,14 @@ Bot profiles are json files (such as `andy.json`) that define:
 
 ## Model Specifications
 
-LLM models can be specified simply as `"model": "gpt-4o"`, or more specifically with `"{api}/{model}"`, like `"openrouter/google/gemini-2.5-pro"`. See all supported APIs [here](#model-customization).
+LLM models can be specified simply as `"model": "gpt-5.4"`, or more specifically with `"{api}/{model}"`, like `"openrouter/google/gemini-2.5-pro"`. See all supported APIs [here](#model-customization).
 
 The `model` field can be a string or an object. A model object must specify an `api`, and optionally a `model`, `url`, and additional `params`. You can also use different models/providers for chatting, coding, vision, embedding, and voice synthesis. See the example below.
 
 ```json
 "model": {
   "api": "openai",
-  "model": "gpt-4o",
+  "model": "gpt-5.4",
   "url": "https://api.openai.com/v1/",
   "params": {
     "max_tokens": 1000,
@@ -186,18 +184,18 @@ The `model` field can be a string or an object. A model object must specify an `
 },
 "code_model": {
   "api": "openai",
-  "model": "gpt-4",
+  "model": "gpt-5.4-mini",
   "url": "https://api.openai.com/v1/"
 },
 "vision_model": {
   "api": "openai",
-  "model": "gpt-4o",
+  "model": "gpt-5.4",
   "url": "https://api.openai.com/v1/"
 },
 "embedding": {
   "api": "openai",
   "url": "https://api.openai.com/v1/",
-  "model": "text-embedding-ada-002"
+  "model": "text-embedding-3-small"
 },
 "speak_model": "openai/tts-1/echo"
 ```
@@ -234,7 +232,7 @@ While AI generated code is allowed, please vet it carefully. Submitting tons of 
 Some of the node modules that we depend on have bugs in them. To add a patch, change your local node module file and run `npx patch-package [package-name]`
 
 ## Development Team
-Thanks to all who contributed to the project, especially the official development team: [@MaxRobinsonTheGreat](https://github.com/MaxRobinsonTheGreat), [@kolbytn](https://github.com/kolbytn), [@icwhite](https://github.com/icwhite), [@Sweaterdog](https://github.com/Sweaterdog), [@Ninot1Quyi](https://github.com/Ninot1Quyi), [@riqvip](https://github.com/riqvip), [@uukelele-scratch](https://github.com/uukelele-scratch), [@mrelmida](https://github.com/mrelmida)
+Thanks to all who contributed to the project, especially the official development team: [@MaxRobinsonTheGreat](https://github.com/MaxRobinsonTheGreat), [@kolbytn](https://github.com/kolbytn), [@icwhite](https://github.com/icwhite), [@Sweaterdog](https://github.com/Sweaterdog), [@Ninot1Quyi](https://github.com/Ninot1Quyi), [@riqvip](https://github.com/riqvip), [@uukelele](https://github.com/uukelele), [@mrelmida](https://github.com/mrelmida)
 
 
 ## Citation:
@@ -248,3 +246,9 @@ This work is published in the paper [Collaborating Action by Action: A Multi-age
   url = {https://arxiv.org/abs/2504.17950},
 }
 ```
+
+## Contributors
+
+Thanks to everyone who has submitted issues on and off Github, made suggestions, and generally helped make this a better project.
+
+![Contributors](https://contrib.rocks/image?repo=mindcraft-bots/mindcraft)
