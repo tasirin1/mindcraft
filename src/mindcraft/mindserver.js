@@ -301,7 +301,7 @@ export function createMindServer(host_public = false, port = 8080) {
     // error' dan agen gagal start. Tanpa host = dengar di semua
     // antarmuka (dual-stack), dua-duanya sampai.
     server.listen(port, () => {
-        console.log(`MindServer running on port ${port} on host ${host}`);
+        console.log(`MindServer running on port ${port}`);
     });
 
     return server;
