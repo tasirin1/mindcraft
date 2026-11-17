@@ -57,10 +57,15 @@ export class Prompter {
             max_tokens = this.profile.max_tokens;
 
         let chat_model_profile = selectAPI(this.profile.model);
+        // Alive: teruskan url/params profil (alamat jembatan) — selectAPI
+        // hanya membaca nama model, url-nya hilang di tengah jalan.
+        if (!chat_model_profile.url && this.profile.url) chat_model_profile.url = this.profile.url;
+        if (!chat_model_profile.params && this.profile.params) chat_model_profile.params = this.profile.params;
         this.chat_model = createModel(chat_model_profile);
 
         if (this.profile.code_model) {
             let code_model_profile = selectAPI(this.profile.code_model);
+            if (!code_model_profile.url && this.profile.url) code_model_profile.url = this.profile.url;
             this.code_model = createModel(code_model_profile);
         }
         else {
@@ -69,6 +74,7 @@ export class Prompter {
 
         if (this.profile.vision_model) {
             let vision_model_profile = selectAPI(this.profile.vision_model);
+            if (!vision_model_profile.url && this.profile.url) vision_model_profile.url = this.profile.url;
             this.vision_model = createModel(vision_model_profile);
         }
         else {

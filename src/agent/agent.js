@@ -26,6 +26,13 @@ export class Agent {
 
         // Initialize components
         this.actions = new ActionManager(this);
+        // Alive: mode jembatan kesadaran — bila env MINDCRAFT_BRIDGE_URL
+        // terpasang, model chat diarahkan ke jembatan (penyedia lmstudio,
+        // model "kesadaran") alih-alih profil bawaan.
+        if (process.env.MINDCRAFT_BRIDGE_URL) {
+            settings.profile = { ...settings.profile, model: 'lmstudio/kesadaran', url: process.env.MINDCRAFT_BRIDGE_URL };
+            console.log('Mode jembatan kesadaran HIDUP — model chat lewat', process.env.MINDCRAFT_BRIDGE_URL);
+        }
         this.prompter = new Prompter(this, settings.profile);
         this.name = (this.prompter.getName() || '').trim();
         console.log(`Initializing agent ${this.name}...`);
