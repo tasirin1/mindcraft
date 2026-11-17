@@ -122,13 +122,17 @@ export class Agent {
                 // 2026-11-17. Kolomnya di ⚙ Agent Settings: login_password
                 // (+ auto_register bila akun bot belum terdaftar). Password
                 // TIDAK pernah ditulis ke log.
-                if (settings.login_password) {
-                    if (settings.auto_register) {
-                        this.bot.chat(`/register ${settings.login_password} ${settings.login_password}`);
+                const loginPassword = process.env.BOT_LOGIN_PASSWORD || settings.login_password;
+                const autoRegister = process.env.BOT_AUTO_REGISTER != null
+                    ? (process.env.BOT_AUTO_REGISTER === 'true' || process.env.BOT_AUTO_REGISTER === '1')
+                    : settings.auto_register;
+                if (loginPassword) {
+                    if (autoRegister) {
+                        this.bot.chat(`/register ${loginPassword} ${loginPassword}`);
                         console.log(`${this.name} auto-register dikirim`);
                         await new Promise((resolve) => setTimeout(resolve, 1500));
                     }
-                    this.bot.chat(`/login ${settings.login_password}`);
+                    this.bot.chat(`/login ${loginPassword}`);
                     console.log(`${this.name} auto-login dikirim`);
                 }
 
