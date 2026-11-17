@@ -73,6 +73,28 @@ export function createMindServer(host_public = false, port = 8080) {
 
     // Model AI aktif saat ini (dari setelan agen pertama yang terdaftar,
     // atau env BOT_MODEL) — buat ditampilkan panel web.
+    // Status AI buat kartu agen di panel (Alive, perintah owner 2026-11-17):
+    // status key TANPA nilainya (asli / penampung / kosong) + model per agen.
+    app.get('/ai-status', (req, res) => {
+        const keyStatus = (v) => {
+            if (!v) return 'kosong';
+            if (v === 'ISI-LEWAT-PANEL-WEB') return 'penampung';
+            return 'asli';
+        };
+        const models = {};
+        for (let name in agent_connections) {
+            const m = agent_connections[name].settings?.profile?.model;
+            models[name] = (typeof m === 'string' ? m : (m?.model || '')) || process.env.BOT_MODEL || 'gemini-flash-latest';
+        }
+        res.json({
+            keys: {
+                Gemini: keyStatus(process.env.GEMINI_API_KEY),
+                OpenRouter: keyStatus(process.env.OPENROUTER_API_KEY)
+            },
+            models
+        });
+    });
+
     app.get('/current-model', (req, res) => {
         let model = process.env.BOT_MODEL || '';
         for (let name in agent_connections) {

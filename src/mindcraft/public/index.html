@@ -1018,6 +1018,7 @@
                             </div>
                             ${showViewer ? `<div class="cell" style="grid-row: span 3; padding:0;">${viewerHTML}</div>` : ''}
                             <div class="cell" id="action-${agent.name}">action: -</div>
+                            <div class="cell" id="ai-${agent.name}">AI: …</div>
                             <div class="cell" id="mode-${agent.name}">gamemode: -</div>
                             <div class="cell" id="health-${agent.name}">health: -</div>
                             <div class="cell" id="hunger-${agent.name}">hunger: -</div>
@@ -1108,6 +1109,7 @@
         refreshCurrentModel();
 
         socket.on('agents-status', async (agents) => {
+            setTimeout(refreshAiStatus, 300);
             // Fetch settings for all agents that don't have current settings
             const needSettings = agents.filter(a => !agentSettings[a.name]);
             if (needSettings.length > 0) {
@@ -1202,7 +1204,7 @@
                     status.textContent = 'Key terpasang. Bot di-restart biar key-nya aktif...';
                     if (currentAgentName) socket.emit('start-agent', currentAgentName);
                     else currentAgents.forEach(a => socket.emit('start-agent', a.name));
-                    setTimeout(() => { status.textContent = 'Key aktif — bot sudah jalan lagi dengan key baru.'; }, 4000);
+                    setTimeout(() => { status.textContent = 'Key aktif — bot sudah jalan lagi dengan key baru.'; refreshAiStatus(); }, 4000);
                 } else {
                     status.textContent = 'Gagal memasang key: ' + ((res && res.error) || 'tidak diketahui');
                 }
@@ -1215,6 +1217,23 @@
             inp.style.display = sel.value === '__custom__' ? '' : 'none';
             if (sel.value === '__custom__') inp.focus();
         }
+
+        // Status key + model di kartu agen (Alive 2026-11-17)
+        function refreshAiStatus() {
+            fetch('/ai-status').then(r => r.json()).then(d => {
+                const realKeys = Object.entries(d.keys || {}).filter(([, v]) => v === 'asli').map(([k]) => k);
+                const anyPlaceholder = Object.values(d.keys || {}).includes('penampung');
+                const keyText = realKeys.length ? '🔑 ' + realKeys.join(' + ') + ' ✓'
+                    : (anyPlaceholder ? '🔑 key penampung (isi key asli di ⚙)' : '🔑 belum ada key');
+                document.querySelectorAll('[id^="ai-"]').forEach(el => {
+                    const name = el.id.slice(3);
+                    const model = (d.models && d.models[name]) || '-';
+                    el.textContent = keyText + ' · 🤖 ' + model;
+                    el.style.color = realKeys.length ? '' : '#f0ad4e';
+                });
+            }).catch(() => {});
+        }
+        setInterval(refreshAiStatus, 15000);
 
         async function refreshCurrentModel() {
             try {
