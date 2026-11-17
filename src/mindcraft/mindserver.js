@@ -295,8 +295,12 @@ export function createMindServer(host_public = false, port = 8080) {
     if (host_public) {
         console.log('Public hosting not supported yet. Using localhost.');
     }
-    const host = 'localhost';
-    server.listen(port, host, () => {
+    // Jangan ikat ke 'localhost': di sebagian lingkungan (mis. Colab)
+    // 'localhost' untuk listen ter-resolve ke ::1 (IPv6) saja, sedangkan
+    // klien socket.io agen menyambung ke 127.0.0.1 (IPv4) -> 'xhr poll
+    // error' dan agen gagal start. Tanpa host = dengar di semua
+    // antarmuka (dual-stack), dua-duanya sampai.
+    server.listen(port, () => {
         console.log(`MindServer running on port ${port} on host ${host}`);
     });
 
