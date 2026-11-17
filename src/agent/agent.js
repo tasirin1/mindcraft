@@ -117,6 +117,21 @@ export class Agent {
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 
                 console.log(`${this.name} spawned.`);
+
+                // Login otomatis server offline (AuthMe dsb.) — keputusan owner
+                // 2026-11-17. Kolomnya di ⚙ Agent Settings: login_password
+                // (+ auto_register bila akun bot belum terdaftar). Password
+                // TIDAK pernah ditulis ke log.
+                if (settings.login_password) {
+                    if (settings.auto_register) {
+                        this.bot.chat(`/register ${settings.login_password} ${settings.login_password}`);
+                        console.log(`${this.name} auto-register dikirim`);
+                        await new Promise((resolve) => setTimeout(resolve, 1500));
+                    }
+                    this.bot.chat(`/login ${settings.login_password}`);
+                    console.log(`${this.name} auto-login dikirim`);
+                }
+
                 this.clearBotLogs();
               
                 this._setupEventHandlers(save_data, init_message);

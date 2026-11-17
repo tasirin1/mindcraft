@@ -28,6 +28,8 @@ const settings = {
 
     "load_memory": false, // load memory from previous session
     "init_message": "Aku udah spawn",
+    "login_password": "", // password /login server offline (AuthMe dsb.) — kosong = login otomatis MATI. Username-nya nama bot. Tersimpan di berkas setelan mesin bot: JANGAN pakai password yang dipakai di tempat lain
+    "auto_register": false, // true = bot /register dulu baru /login (buat akun bot yang belum terdaftar di server itu)
     "only_chat_with": [], // users that the bots listen to and send general messages to. if empty it will chat publicly
 
     "speak": false,

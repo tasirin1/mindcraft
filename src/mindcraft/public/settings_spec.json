@@ -41,6 +41,16 @@
         "description": "The initial message to send to the bot",
         "default": "Respond with hello world and your name"
     },
+    "login_password": {
+        "type": "string",
+        "description": "Password for automatic /login on offline servers (AuthMe). Empty = auto-login off. The username is the bot's name. Stored in the bot machine's settings file — do not reuse an important password.",
+        "default": ""
+    },
+    "auto_register": {
+        "type": "boolean",
+        "description": "Register first (/register) then /login — for servers where the bot account does not exist yet.",
+        "default": false
+    },
     "only_chat_with": {
         "type": "array",
         "description": "List of agents to only chat with. If empty, the bot will chat publicly",
